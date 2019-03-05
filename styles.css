@@ -12,7 +12,6 @@ body {
     padding: 10px;
 }
 
-
 .submitButton {
     background-color: #4CAF50; /* Green */
     border: white;
@@ -42,6 +41,7 @@ body {
 .responses-a:hover {
   color: black;
   text-decoration: none;
+    display: block;
 }
 
 .title{

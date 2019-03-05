@@ -1,86 +1,63 @@
-$(document).ready(function(){
-  'use strict'
-  
-  //variable that contains the max amount of responses from the API
-  var numOfResponses = 20;
+$(document).ready(function () {
+    'use strict';
     
-  function displayResponses(apiData){
-         //clear any previous search entry responses
-    $('#response').empty();
-
-    //array for containing info on responses as objects
-    var responses = [];
-    //variables to hold info on responses before putting in an object
-    var title;
-    var snippet;
-    var url;
+   // document.getElementById("#searchField").setAttribute(‘disabled’, false);
     
-    for(var i = 0; i < numOfResponses; i++){
-          //object for storing info on each response
-    var responseObj = {title:"", snippet:"", url:""};
-      
-      //retrieve info on each response
-      title = apiData.query.search[i].title; //last thing Kevin looked at
-      snippet = apiData.query.search[i].snippet;
-      url = "https://en.wikipedia.org/wiki/" + (title.replace(/ /g, "_"));
+   function fetchData() {
+         
+        var searchField = $('#searchField').val();
+         
+        if (searchField === "") {
+            alert("Please enter something in the field first.");
+        } else {
+            var responsesObj = {};
+            var title = "";
+            var author = "";
+            var publisher = "";
+            var url = "";
+            var thumbnail = "";
+             
+            fetch(('https://www.googleapis.com/books/v1/volumes/?q=' + searchField), {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'omit',
+                redirect: 'follow',
+                cache: 'no-cache',
+                headers: new Headers({
+                    'Content-Type': 'application/json'
+                })
+            }).then(function (response) {
+                // convert to JSON
+                return response.json();
+            }).then(function (results) {
 
-      //enter each info part into the object
-      responseObj.title = title;
-      responseObj.snippet = snippet;
-      responseObj.url = url;
-      
-      //push object to array
-      responses.push(responseObj);
+                for (var i = 0; i < results.items.length; i++) {
+                    title = results.items[i].volumeInfo.title;
+                    author = results.items[i].volumeInfo.authors;
+                    publisher = results.items[i].volumeInfo.publisher;
+                    url = results.items[i].volumeInfo.infoLink;
+                    thumbnail = results.items[i].volumeInfo.imageLinks.thumbnail;
+                    
+                    //Creates the HTML elements that will display the results
+                    var htmlAppend = '<div class = "responses-div"><a class = "responses-a" target = "_blank" href =' + url +'><img src="'+ thumbnail + '><h2 class = "title">'+title+'</h2><h3>'+author+'</h3><h4>'+publisher+'</h4></a></div>';
+
+
+                    //Appends the results to the ul with slideDown animation
+                    $("ul").append(htmlAppend).children(':last').slideDown('slow');
+                }
+                
+            })
+        }
     };
-
-       //Iterates through responses
-    for(var j = 0; j < responses.length; j++)
-      {
-        //Declares & initializes local variables that will hold result information - just for looks
-        var title = responses[j].title;
-        var snippet = responses[j].snippet;
-        var url = responses[j].url;
-        
-        //Creates the HTML elements that will display the results
-        var htmlAppend = '<div class = "responses-div"><a class = "responses-a" target = "_blank" href =' + responses[j].url +'><h2 class = "title">'+responses[j].title+'</h2><p>'+responses[j].snippet+'</p></a></div>';
-
-
-//Appends the results to the ul with slideDown animation
-  $("ul").append(htmlAppend).children(':last').slideDown('slow');
-      }
-  };
   
-    //function used to contact Wiki API using user search input
-  function contactWiki(searchField){
-    $.ajax({
-        url: 'https://en.wikipedia.org/w/api.php',
-        data: { action: 'query', 
-            list: 'search', 
-            srlimit: numOfResponses,
-            srsearch: searchField, 
-            format: 'json'},
-        dataType: 'jsonp',
-        success: displayResponses
-    }); 
-  }
-
-  function getInput() {
-    //place value user entered in searchField variable
-    var searchField = $('#searchField').val();
-    //run function to contact Wiki API
-    contactWiki(searchField);
-  }
-  
-  
-  //run getInput() when Submit button is clicked
-  $("#submitButton").click(getInput);
+  //run fetchData() when Submit button is clicked
+  $("#submitButton").click(fetchData);
   //"click" submit button if user presses Enter
-  $('#searchField').keypress(function (e) {
-    if (e.which == 13) {
-     $('#submitButton').click();
-      return false;
-  }
-  
-
-});
+    $('#searchField').keypress(function (e) {
+        if (e.which === 13) {
+            $('#submitButton').click();
+            return false;
+            }
+        return false;
+    })
 })
